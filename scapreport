@@ -1,0 +1,46 @@
+#!/usr/bin/expect -f
+
+spawn ssh 172.31.0.202
+
+expect -timeout 5 "(yes/no)? " {
+	send "yes\r";
+	exp_continue
+}
+expect "password: "
+send "vagrant\r"
+expect "$ "
+
+expect "Available Packages
+openscap-scanner.x86_64                          1.2.13-2.el6                          @base" {
+	send "sudo yum -y install openscap-scanner scap-security-guide\r"
+	expect "$ "
+	exp_continue
+}
+
+send "ls -la /usr/share/xml/scap/ssg/content/ssg-*-ds.xml\r"
+expect "$ "
+send "oscap xccdf eval \
+ --profile xccdf_org.ssgproject.content_profile_rht-ccp \
+ --results-arf arf.xml \
+ --report report.html \
+ /usr/share/xml/scap/ssg/content/ssg-rhel6-ds.xml\r"
+expect "$ "
+
+send "mv report.html wiki-`date +%Y_%m_%d_%H:%M:%S`.html\r"
+expect "$ "
+
+send "scp 172.31.0.202:/home/vagrant/*.html 172.31.0.201:/home/vagrant/reports/\r"
+expect "$ "
+
+expect "password: "
+send "vagrant\r"
+expect "$ "
+expect -timeout 5 "(yes/no)? " {
+	send "yes\r";
+	exp_continue
+}
+
+expect "password: "
+send "vagrant\r"
+expect "$ "
+
